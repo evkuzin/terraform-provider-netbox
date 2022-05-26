@@ -5,8 +5,8 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	netboxClient "github.com/fbreckle/go-netbox/netbox/client"
-	"github.com/fbreckle/go-netbox/netbox/client/status"
+	netboxClient "github.com/netbox-community/go-netbox/netbox/client"
+	"github.com/netbox-community/go-netbox/netbox/client/status"
 	"github.com/stretchr/testify/assert"
 )
 

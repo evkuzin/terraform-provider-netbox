@@ -4,9 +4,9 @@ import (
 	"errors"
 	"strconv"
 
-	"github.com/fbreckle/go-netbox/netbox/client"
-	"github.com/fbreckle/go-netbox/netbox/client/tenancy"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/netbox-community/go-netbox/netbox/client"
+	"github.com/netbox-community/go-netbox/netbox/client/tenancy"
 )
 
 func dataSourceNetboxTenantGroup() *schema.Resource {

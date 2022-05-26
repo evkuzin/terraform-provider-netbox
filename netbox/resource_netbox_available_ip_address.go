@@ -1,11 +1,11 @@
 package netbox
 
 import (
-	"github.com/fbreckle/go-netbox/netbox/client"
-	"github.com/fbreckle/go-netbox/netbox/client/ipam"
-	"github.com/fbreckle/go-netbox/netbox/models"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/netbox-community/go-netbox/netbox/client"
+	"github.com/netbox-community/go-netbox/netbox/client/ipam"
+	"github.com/netbox-community/go-netbox/netbox/models"
 	"strconv"
 )
 
@@ -73,29 +73,24 @@ func resourceNetboxAvailableIPAddress() *schema.Resource {
 
 func resourceNetboxAvailableIPAddressCreate(d *schema.ResourceData, m interface{}) error {
 	api := m.(*client.NetBoxAPI)
-	prefixId := int64(d.Get("prefix_id").(int))
-	vrfId := int64(int64(d.Get("vrf_id").(int)))
-	rangeId := int64(d.Get("ip_range_id").(int))
-	nestedvrf := models.NestedVRF{
-		ID: vrfId,
-	}
-	data := models.AvailableIP{
-		Vrf: &nestedvrf,
+	prefixId := int64(d.Get("family").(int))
+	address := d.Get("address").(string)
+
+	data := models.WritableAvailableIP{
+		Address: address,
+		Family:  prefixId,
 	}
 	if prefixId != 0 {
-		params := ipam.NewIpamPrefixesAvailableIpsCreateParams().WithID(prefixId).WithData([]*models.AvailableIP{&data})
+		params := ipam.NewIpamPrefixesAvailableIpsCreateParams().WithID(prefixId).WithData(&data)
 		res, _ := api.Ipam.IpamPrefixesAvailableIpsCreate(params, nil)
 		// Since we generated the ip_address set that now
 		d.SetId(strconv.FormatInt(res.Payload[0].ID, 10))
-		d.Set("ip_address", *res.Payload[0].Address)
+		err := d.Set("ip_address", *res.Payload[0].Address)
+		if err != nil {
+			return err
+		}
 	}
-	if rangeId != 0 {
-		params := ipam.NewIpamIPRangesAvailableIpsCreateParams().WithID(rangeId).WithData([]*models.AvailableIP{&data})
-		res, _ := api.Ipam.IpamIPRangesAvailableIpsCreate(params, nil)
-		// Since we generated the ip_address set that now
-		d.SetId(strconv.FormatInt(res.Payload[0].ID, 10))
-		d.Set("ip_address", *res.Payload[0].Address)
-	}
+
 	return resourceNetboxAvailableIPAddressUpdate(d, m)
 }
 
@@ -107,12 +102,7 @@ func resourceNetboxAvailableIPAddressRead(d *schema.ResourceData, m interface{})
 
 	res, err := api.Ipam.IpamIPAddressesRead(params, nil)
 	if err != nil {
-		errorcode := err.(*ipam.IpamIPAddressesReadDefault).Code()
-		if errorcode == 404 {
-			// If the ID is updated to blank, this tells Terraform the resource no longer exists (maybe it was destroyed out of band). Just like the destroy callback, the Read function should gracefully handle this case. https://www.terraform.io/docs/extend/writing-custom-providers.html
-			d.SetId("")
-			return nil
-		}
+
 		return err
 	}
 

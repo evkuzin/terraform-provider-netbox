@@ -1,7 +1,7 @@
 terraform {
   required_providers {
     netbox = {
-      source = "e-breuninger/netbox"
+      source = "evgeny/netbox"
     }
   }
 }
@@ -63,7 +63,7 @@ resource "netbox_cluster" "testcluster" {
   site_id          = netbox_site.testsite.id
 
   # tags can be referenced by name but have to be created first ..
-  tags = ["foo"]
+  tags       = ["foo"]
   # .. or explicitly depended upon, unless created separately
   depends_on = [netbox_tag.foo]
 }

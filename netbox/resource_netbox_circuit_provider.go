@@ -3,11 +3,11 @@ package netbox
 import (
 	"strconv"
 
-	"github.com/fbreckle/go-netbox/netbox/client"
-	"github.com/fbreckle/go-netbox/netbox/client/circuits"
-	"github.com/fbreckle/go-netbox/netbox/models"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/netbox-community/go-netbox/netbox/client"
+	"github.com/netbox-community/go-netbox/netbox/client/circuits"
+	"github.com/netbox-community/go-netbox/netbox/models"
 )
 
 func resourceNetboxCircuitProvider() *schema.Resource {
@@ -44,7 +44,7 @@ func resourceNetboxCircuitProvider() *schema.Resource {
 func resourceNetboxCircuitProviderCreate(d *schema.ResourceData, m interface{}) error {
 	api := m.(*client.NetBoxAPI)
 
-	data := models.Provider{}
+	data := models.WritableProvider{}
 
 	name := d.Get("name").(string)
 	data.Name = &name
@@ -79,12 +79,7 @@ func resourceNetboxCircuitProviderRead(d *schema.ResourceData, m interface{}) er
 	res, err := api.Circuits.CircuitsProvidersRead(params, nil)
 
 	if err != nil {
-		errorcode := err.(*circuits.CircuitsProvidersReadDefault).Code()
-		if errorcode == 404 {
-			// If the ID is updated to blank, this tells Terraform the resource no longer exists (maybe it was destroyed out of band). Just like the destroy callback, the Read function should gracefully handle this case. https://www.terraform.io/docs/extend/writing-custom-providers.html
-			d.SetId("")
-			return nil
-		}
+
 		return err
 	}
 
@@ -98,7 +93,7 @@ func resourceNetboxCircuitProviderUpdate(d *schema.ResourceData, m interface{}) 
 	api := m.(*client.NetBoxAPI)
 
 	id, _ := strconv.ParseInt(d.Id(), 10, 64)
-	data := models.Provider{}
+	data := models.WritableProvider{}
 
 	name := d.Get("name").(string)
 	data.Name = &name

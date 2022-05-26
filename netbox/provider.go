@@ -2,14 +2,8 @@ package netbox
 
 import (
 	"context"
-	"fmt"
-	"strings"
-
-	"github.com/fbreckle/go-netbox/netbox/client"
-	"github.com/fbreckle/go-netbox/netbox/client/status"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"golang.org/x/exp/slices"
 )
 
 // Provider returns a schema.Provider for Netbox.
@@ -61,6 +55,7 @@ func Provider() *schema.Provider {
 			"netbox_vrf":              dataSourceNetboxVrf(),
 			"netbox_platform":         dataSourceNetboxPlatform(),
 			"netbox_prefix":           dataSourceNetboxPrefix(),
+			"netbox_device":           dataSourceNetboxDevice(),
 			"netbox_device_role":      dataSourceNetboxDeviceRole(),
 			"netbox_site":             dataSourceNetboxSite(),
 			"netbox_tag":              dataSourceNetboxTag(),
@@ -121,33 +116,6 @@ func providerConfigure(ctx context.Context, data *schema.ResourceData) (interfac
 	netboxClient, clientError := config.Client()
 	if clientError != nil {
 		return nil, diag.FromErr(clientError)
-	}
-
-	// Unless explicitly switched off, use the client to retrieve the Netbox version
-	// so we can determine compatibility of the provider with the used Netbox
-	skipVersionCheck := data.Get("skip_version_check").(bool)
-
-	if !skipVersionCheck {
-		req := status.NewStatusListParams()
-		res, err := netboxClient.(*client.NetBoxAPI).Status.StatusList(req, nil)
-
-		if err != nil {
-			return nil, diag.FromErr(err)
-		}
-
-		netboxVersion := res.GetPayload().(map[string]interface{})["netbox-version"].(string)
-
-		supportedVersions := []string{"3.1.11", "3.1.10", "3.1.9", "3.1.8", "3.1.7", "3.1.6", "3.1.5", "3.1.4", "3.1.3", "3.1.2", "3.1.1"}
-
-		if !slices.Contains(supportedVersions, netboxVersion) {
-
-			// Currently, there is no way to test these warnings. There is an issue to track this: https://github.com/hashicorp/terraform-plugin-sdk/issues/864
-			diags = append(diags, diag.Diagnostic{
-				Severity: diag.Warning,
-				Summary:  "Possibly unsupported Netbox version",
-				Detail:   fmt.Sprintf("Your Netbox version is v%v. The provider was successfully tested against the following versions:\n\n  %v\n\nUnexpected errors may occur.", netboxVersion, strings.Join(supportedVersions, ", ")),
-			})
-		}
 	}
 
 	return netboxClient, diags

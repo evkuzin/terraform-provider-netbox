@@ -4,11 +4,11 @@ import (
 	"context"
 	"strconv"
 
-	"github.com/fbreckle/go-netbox/netbox/client"
-	"github.com/fbreckle/go-netbox/netbox/client/dcim"
-	"github.com/fbreckle/go-netbox/netbox/models"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/netbox-community/go-netbox/netbox/client"
+	"github.com/netbox-community/go-netbox/netbox/client/dcim"
+	"github.com/netbox-community/go-netbox/netbox/models"
 )
 
 func resourceNetboxDevice() *schema.Resource {
@@ -35,9 +35,9 @@ func resourceNetboxDevice() *schema.Resource {
 				Type:     schema.TypeInt,
 				Optional: true,
 			},
-			"role_id": &schema.Schema{
+			"device_role": &schema.Schema{
 				Type:     schema.TypeInt,
-				Optional: true,
+				Required: true,
 			},
 			"serial": &schema.Schema{
 				Type:     schema.TypeString,
@@ -97,7 +97,7 @@ func resourceNetboxDeviceCreate(ctx context.Context, d *schema.ResourceData, m i
 		data.Tenant = &tenantID
 	}
 
-	roleIDValue, ok := d.GetOk("role_id")
+	roleIDValue, ok := d.GetOk("device_role")
 	if ok {
 		roleID := int64(roleIDValue.(int))
 		data.DeviceRole = &roleID
@@ -134,12 +134,6 @@ func resourceNetboxDeviceRead(ctx context.Context, d *schema.ResourceData, m int
 
 	res, err := api.Dcim.DcimDevicesRead(params, nil)
 	if err != nil {
-		errorcode := err.(*dcim.DcimDevicesReadDefault).Code()
-		if errorcode == 404 {
-			// If the ID is updated to blank, this tells Terraform the resource no longer exists (maybe it was destroyed out of band). Just like the destroy callback, the Read function should gracefully handle this case. https://www.terraform.io/docs/extend/writing-custom-providers.html
-			d.SetId("")
-			return nil
-		}
 		return diag.FromErr(err)
 	}
 
@@ -162,9 +156,9 @@ func resourceNetboxDeviceRead(ctx context.Context, d *schema.ResourceData, m int
 	}
 
 	if res.GetPayload().DeviceRole != nil {
-		d.Set("role_id", res.GetPayload().DeviceRole.ID)
+		d.Set("device_role", res.GetPayload().DeviceRole.ID)
 	} else {
-		d.Set("role_id", nil)
+		d.Set("device_role", nil)
 	}
 
 	if res.GetPayload().Site != nil {
@@ -202,7 +196,7 @@ func resourceNetboxDeviceUpdate(ctx context.Context, d *schema.ResourceData, m i
 		data.Tenant = &tenantID
 	}
 
-	roleIDValue, ok := d.GetOk("role_id")
+	roleIDValue, ok := d.GetOk("device_role")
 	if ok {
 		roleID := int64(roleIDValue.(int))
 		data.DeviceRole = &roleID

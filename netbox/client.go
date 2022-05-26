@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"net/http"
 
-	netboxclient "github.com/fbreckle/go-netbox/netbox/client"
 	httptransport "github.com/go-openapi/runtime/client"
 	"github.com/goware/urlx"
+	netboxclient "github.com/netbox-community/go-netbox/netbox/client"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -39,7 +39,7 @@ func (cfg *Config) Client() (interface{}, error) {
 	// parse serverUrl
 	parsedURL, urlParseError := urlx.Parse(cfg.ServerURL)
 	if urlParseError != nil {
-		return nil, fmt.Errorf("Error while trying to parse URL: %s", urlParseError)
+		return nil, fmt.Errorf("error while trying to parse URL: %s", urlParseError)
 	}
 
 	desiredRuntimeClientSchemes := []string{parsedURL.Scheme}

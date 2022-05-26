@@ -6,11 +6,11 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/fbreckle/go-netbox/netbox/client"
-	"github.com/fbreckle/go-netbox/netbox/client/ipam"
-	"github.com/fbreckle/go-netbox/netbox/models"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/netbox-community/go-netbox/netbox/client"
+	"github.com/netbox-community/go-netbox/netbox/client/ipam"
+	"github.com/netbox-community/go-netbox/netbox/models"
 )
 
 func resourceNetboxAvailablePrefix() *schema.Resource {
@@ -134,8 +134,11 @@ func resourceNetboxAvailablePrefixCreate(d *schema.ResourceData, m interface{}) 
 	}
 
 	payload := res.GetPayload()
-	d.SetId(strconv.FormatInt(payload.ID, 10))
-	d.Set("prefix", payload.Prefix)
+	d.SetId(strconv.FormatInt(payload[0].ID, 10))
+	err = d.Set("prefix", payload[0].Prefix)
+	if err != nil {
+		return err
+	}
 
 	return resourceNetboxPrefixUpdate(d, m)
 }

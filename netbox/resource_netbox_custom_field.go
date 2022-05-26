@@ -4,11 +4,11 @@ import (
 	"fmt"
 	"strconv"
 
-	"github.com/fbreckle/go-netbox/netbox/client"
-	"github.com/fbreckle/go-netbox/netbox/client/extras"
-	"github.com/fbreckle/go-netbox/netbox/models"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/netbox-community/go-netbox/netbox/client"
+	"github.com/netbox-community/go-netbox/netbox/client/extras"
+	"github.com/netbox-community/go-netbox/netbox/models"
 )
 
 func resourceCustomField() *schema.Resource {
@@ -204,40 +204,64 @@ func resourceNetboxCustomFieldRead(d *schema.ResourceData, m interface{}) error 
 	params := extras.NewExtrasCustomFieldsReadParams().WithID(id)
 	res, err := api.Extras.ExtrasCustomFieldsRead(params, nil)
 	if err != nil {
-		errapi, ok := err.(*extras.ExtrasCustomFieldsReadDefault)
-		if !ok {
-			return err
-		}
-		errorcode := errapi.Code()
-		if errorcode == 404 {
-			d.SetId("")
-			return nil
-		}
 		return err
 	}
 
-	d.Set("name", res.GetPayload().Name)
-	d.Set("type", *res.GetPayload().Type.Value)
+	err = d.Set("name", res.GetPayload().Name)
+	if err != nil {
+		return err
+	}
+	err = d.Set("type", *res.GetPayload().Type.Value)
+	if err != nil {
+		return err
+	}
 
-	d.Set("content_types", res.GetPayload().ContentTypes)
+	err = d.Set("content_types", res.GetPayload().ContentTypes)
+	if err != nil {
+		return err
+	}
 
 	choices := res.GetPayload().Choices
 	if choices != nil {
-		d.Set("choices", res.GetPayload().Choices)
+		err = d.Set("choices", res.GetPayload().Choices)
+		if err != nil {
+			return err
+		}
 	}
 
-	d.Set("weight", res.GetPayload().Weight)
+	err = d.Set("weight", res.GetPayload().Weight)
+	if err != nil {
+		return err
+	}
 	if res.GetPayload().Default != nil {
 		d.Set("default", *res.GetPayload().Default)
 	}
 
-	d.Set("description", res.GetPayload().Description)
-	d.Set("label", res.GetPayload().Label)
-	d.Set("required", res.GetPayload().Required)
+	err = d.Set("description", res.GetPayload().Description)
+	if err != nil {
+		return err
+	}
+	err = d.Set("label", res.GetPayload().Label)
+	if err != nil {
+		return err
+	}
+	err = d.Set("required", res.GetPayload().Required)
+	if err != nil {
+		return err
+	}
 
-	d.Set("validation_maximum", res.GetPayload().ValidationMaximum)
-	d.Set("validation_minimum", res.GetPayload().ValidationMinimum)
-	d.Set("validation_regex", res.GetPayload().ValidationRegex)
+	err = d.Set("validation_maximum", res.GetPayload().ValidationMaximum)
+	if err != nil {
+		return err
+	}
+	err = d.Set("validation_minimum", res.GetPayload().ValidationMinimum)
+	if err != nil {
+		return err
+	}
+	err = d.Set("validation_regex", res.GetPayload().ValidationRegex)
+	if err != nil {
+		return err
+	}
 
 	return nil
 }

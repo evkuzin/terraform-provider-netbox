@@ -6,9 +6,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/fbreckle/go-netbox/netbox/client"
-	"github.com/fbreckle/go-netbox/netbox/client/circuits"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/netbox-community/go-netbox/netbox/client"
+	"github.com/netbox-community/go-netbox/netbox/client/circuits"
 )
 
 func testAccNetboxCircuitDependencies(testName string, testSlug string) string {

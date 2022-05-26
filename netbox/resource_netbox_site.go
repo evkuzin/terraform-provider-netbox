@@ -3,11 +3,11 @@ package netbox
 import (
 	"strconv"
 
-	"github.com/fbreckle/go-netbox/netbox/client"
-	"github.com/fbreckle/go-netbox/netbox/client/dcim"
-	"github.com/fbreckle/go-netbox/netbox/models"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/netbox-community/go-netbox/netbox/client"
+	"github.com/netbox-community/go-netbox/netbox/client/dcim"
+	"github.com/netbox-community/go-netbox/netbox/models"
 )
 
 func resourceNetboxSite() *schema.Resource {
@@ -135,7 +135,7 @@ func resourceNetboxSiteCreate(d *schema.ResourceData, m interface{}) error {
 
 	asnValue, ok := d.GetOk("asn")
 	if ok {
-		data.Asn = int64ToPtr(int64(asnValue.(int)))
+		data.Asns = asnValue.([]int64)
 	}
 
 	data.Tags, _ = getNestedTagListFromResourceDataSet(api, d.Get("tags"))
@@ -165,42 +165,79 @@ func resourceNetboxSiteRead(d *schema.ResourceData, m interface{}) error {
 	res, err := api.Dcim.DcimSitesRead(params, nil)
 
 	if err != nil {
-		errorcode := err.(*dcim.DcimSitesReadDefault).Code()
-		if errorcode == 404 {
-			// If the ID is updated to blank, this tells Terraform the resource no longer exists (maybe it was destroyed out of band). Just like the destroy callback, the Read function should gracefully handle this case. https://www.terraform.io/docs/extend/writing-custom-providers.html
-			d.SetId("")
-			return nil
-		}
+
 		return err
 	}
 
-	d.Set("name", res.GetPayload().Name)
-	d.Set("slug", res.GetPayload().Slug)
-	d.Set("status", res.GetPayload().Status.Value)
-	d.Set("description", res.GetPayload().Description)
-	d.Set("facility", res.GetPayload().Facility)
-	d.Set("longitude", res.GetPayload().Longitude)
-	d.Set("latitude", res.GetPayload().Latitude)
-	d.Set("timezone", res.GetPayload().TimeZone)
-	d.Set("asn", res.GetPayload().Asn)
+	err = d.Set("name", res.GetPayload().Name)
+	if err != nil {
+		return err
+	}
+	err = d.Set("slug", res.GetPayload().Slug)
+	if err != nil {
+		return err
+	}
+	err = d.Set("status", res.GetPayload().Status.Value)
+	if err != nil {
+		return err
+	}
+	err = d.Set("description", res.GetPayload().Description)
+	if err != nil {
+		return err
+	}
+	err = d.Set("facility", res.GetPayload().Facility)
+	if err != nil {
+		return err
+	}
+	err = d.Set("longitude", res.GetPayload().Longitude)
+	if err != nil {
+		return err
+	}
+	err = d.Set("latitude", res.GetPayload().Latitude)
+	if err != nil {
+		return err
+	}
+	err = d.Set("timezone", res.GetPayload().TimeZone)
+	if err != nil {
+		return err
+	}
+	err = d.Set("asn", res.GetPayload().Asns)
+	if err != nil {
+		return err
+	}
 
 	if res.GetPayload().Region != nil {
-		d.Set("region_id", res.GetPayload().Region.ID)
+		err = d.Set("region_id", res.GetPayload().Region.ID)
+		if err != nil {
+			return err
+		}
 	} else {
-		d.Set("region_id", nil)
+		err = d.Set("region_id", nil)
+		if err != nil {
+			return err
+		}
 	}
 
 	if res.GetPayload().Tenant != nil {
-		d.Set("tenant_id", res.GetPayload().Tenant.ID)
+		err = d.Set("tenant_id", res.GetPayload().Tenant.ID)
+		if err != nil {
+			return err
+		}
 	} else {
-		d.Set("tenant_id", nil)
+		err = d.Set("tenant_id", nil)
+		if err != nil {
+			return err
+		}
 	}
 
 	cf := getCustomFields(res.GetPayload().CustomFields)
 	if cf != nil {
 		d.Set(customFieldsKey, cf)
 	}
-	d.Set("tags", getTagListFromNestedTagList(res.GetPayload().Tags))
+	err = d.Set("tags", getTagListFromNestedTagList(res.GetPayload().Tags))
+	if err != nil {
+		return err
+	}
 
 	return nil
 }
@@ -258,7 +295,7 @@ func resourceNetboxSiteUpdate(d *schema.ResourceData, m interface{}) error {
 
 	asnValue, ok := d.GetOk("asn")
 	if ok {
-		data.Asn = int64ToPtr(int64(asnValue.(int)))
+		data.Asns = asnValue.([]int64)
 	}
 
 	data.Tags, _ = getNestedTagListFromResourceDataSet(api, d.Get("tags"))

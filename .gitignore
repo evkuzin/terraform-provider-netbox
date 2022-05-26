@@ -1,9 +1,10 @@
 *.dll
 *.exe
 .DS_Store
-example.tf
+*.tf
 terraform.tfplan
 terraform.tfstate
+terraform-provider-netbox_*
 bin/
 dist/
 modules-dev/
